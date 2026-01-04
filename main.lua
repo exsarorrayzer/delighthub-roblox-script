@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Delight Hub",
-   LoadingTitle = "Delight Hub v3",
+   LoadingTitle = "Delight Hub v4",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -13,8 +13,6 @@ local InfJump_Enabled = false
 local Noclip_Enabled = false
 local Fly_Enabled = false
 local FlySpeed = 50
-local WalkSpeed_Val = 16
-local JumpPower_Val = 50
 
 local function updateESP()
     for _, player in pairs(game:GetService("Players"):GetPlayers()) do
@@ -81,10 +79,7 @@ MovementTab:CreateSlider({
    Range = {16, 1000},
    Increment = 1,
    CurrentValue = 16,
-   Callback = function(v) 
-      WalkSpeed_Val = v 
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v 
-   end
+   Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end
 })
 
 MovementTab:CreateSlider({
@@ -93,7 +88,6 @@ MovementTab:CreateSlider({
    Increment = 1,
    CurrentValue = 50,
    Callback = function(v) 
-      JumpPower_Val = v
       game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
       game.Players.LocalPlayer.Character.Humanoid.JumpPower = v 
    end
@@ -140,3 +134,30 @@ MovementTab:CreateToggle({
    CurrentValue = false,
    Callback = function(v) Noclip_Enabled = v end
 })
+
+local AdminTab = Window:CreateTab("Admin")
+
+AdminTab:CreateDropdown({
+   Name = "Teleport to Player",
+   Options = {},
+   CurrentOption = "",
+   Callback = function(Option)
+      local targetPlayer = game.Players:FindFirstChild(Option)
+      if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+      end
+   end,
+})
+
+task.spawn(function()
+   while true do
+      local playerList = {}
+      for _, p in pairs(game.Players:GetPlayers()) do
+         if p ~= game.Players.LocalPlayer then
+            table.insert(playerList, p.Name)
+         end
+      end
+      AdminTab:ModifyDropdown("Teleport to Player", playerList)
+      task.wait(5)
+   end
+end)
