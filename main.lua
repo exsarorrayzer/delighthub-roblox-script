@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Delight Hub",
-   LoadingTitle = "Delight Hub v7 | Ultimate",
+   LoadingTitle = "Delight Hub v8 | Combat Ready",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -14,6 +14,9 @@ local Noclip_Enabled = false
 local Fly_Enabled = false
 local MoonWalk_Enabled = false
 local AutoClicker_Enabled = false
+local Aimbot_Enabled = false
+local AimAssist_Enabled = false
+local Aimbot_FOV = 90
 local FlySpeed = 50
 
 local function updateESP()
@@ -32,6 +35,32 @@ local function updateESP()
             end
         end
     end
+end
+
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = Aimbot_FOV -- Initial shortest distance is the FOV limit
+    
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = game:GetService("Workspace").CurrentCamera
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local head = player.Character:FindFirstChild("Head")
+            if head then
+                local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(game.UserInputService:GetMouseLocation().X, game.UserInputService:GetMouseLocation().Y)).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer
 end
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
@@ -61,6 +90,23 @@ game:GetService("RunService").Stepped:Connect(function()
             char:SetPrimaryPartCFrame(char.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(180), 0))
         end
     end
+    
+    -- Aimbot and AimAssist logic
+    if (Aimbot_Enabled or AimAssist_Enabled) then
+        local target = getClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild("Head") then
+            local currentCameraCFrame = game:GetService("Workspace").CurrentCamera.CFrame
+            local targetPosition = target.Character.Head.Position
+            local lookAtCFrame = CFrame.new(currentCameraCFrame.Position, targetPosition)
+            
+            if Aimbot_Enabled then
+                game:GetService("Workspace").CurrentCamera.CFrame = lookAtCFrame
+            elseif AimAssist_Enabled then
+                -- Apply a smooth rotation for AimAssist
+                game:GetService("Workspace").CurrentCamera.CFrame = currentCameraCFrame:Lerp(lookAtCFrame, 0.2) -- 0.2 can be adjusted for smoothness
+            end
+        end
+    end
 end)
 
 task.spawn(function()
@@ -79,6 +125,11 @@ VisualsTab:CreateToggle({Name = "ESP Highlight", CurrentValue = false, Callback 
 VisualsTab:CreateColorPicker({Name = "ESP Color", Color = Color3.fromRGB(0, 255, 255), Callback = function(v) ESP_Color = v end})
 VisualsTab:CreateSlider({Name = "FOV", Range = {70, 120}, Increment = 1, CurrentValue = 70, Callback = function(v) game.Workspace.CurrentCamera.FieldOfView = v end})
 VisualsTab:CreateButton({Name = "No Fog & Full Bright", Callback = function() game:GetService("Lighting").FogEnd = 100000 game:GetService("Lighting").Brightness = 2 game:GetService("Lighting").ClockTime = 14 game:GetService("Lighting").GlobalShadows = false end})
+
+local CombatTab = Window:CreateTab("Combat")
+CombatTab:CreateToggle({Name = "Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Enabled = v end})
+CombatTab:CreateToggle({Name = "AimAssist", CurrentValue = false, Callback = function(v) AimAssist_Enabled = v end})
+CombatTab:CreateSlider({Name = "Aimbot FOV", Range = {30, 300}, Increment = 1, CurrentValue = 90, Callback = function(v) Aimbot_FOV = v end})
 
 local MovementTab = Window:CreateTab("Movement")
 MovementTab:CreateSlider({Name = "WalkSpeed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end})
