@@ -1,8 +1,8 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Delight Hub v11",
-   LoadingTitle = "Delight Hub | Ultimate Combat",
+   Name = "Delight Hub v12",
+   LoadingTitle = "Delight Hub | Pro Hybrid",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -12,17 +12,16 @@ local Camera = workspace.CurrentCamera
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-local ESP_Enabled = false
+local ESP_Enabled, Chams_Enabled = false, false
 local Fly_Enabled, FlySpeed = false, 50
-local Noclip_Enabled, MoonWalk_Enabled, InfJump_Enabled = false, false, false
-local OldAimbot, NewAimbot, TriggerBot, SilentAim = false, false, false, false
-local KillAura, TeamCheck, WallCheck, NoRecoil = false, false, false, false
+local Noclip_Enabled, MoonWalk_Enabled, InfJump_Enabled, Spider_Enabled = false, false, false, false
+local OldAimbot, NewAimbot, TriggerBot, AutoReload = false, false, false, false
+local KillAura, TeamCheck, WallCheck, NoRecoil, TargetHUD_Enabled = false, false, false, false, false
 local Aimbot_FOV, Hitbox_W, Hitbox_H = 150, 2, 2
 
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 2
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Filled = false
 FOVCircle.Visible = false
 
 local function getChar() return LP.Character or LP.CharacterAdded:Wait() end
@@ -81,8 +80,7 @@ RunService.RenderStepped:Connect(function()
     if KillAura then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local d = (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
-                if d < 18 then
+                if (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude < 18 then
                     local tool = char:FindFirstChildOfClass("Tool")
                     if tool then tool:Activate() end
                 end
@@ -90,11 +88,29 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    if NoRecoil then
-        local localScript = char:FindFirstChildOfClass("LocalScript")
-        if localScript then
-            local env = getfenv(localScript)
-            if env.Recoil then env.Recoil = 0 end
+    if Spider_Enabled then
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if root then
+            local ray = Ray.new(root.Position, root.CFrame.LookVector * 3)
+            local part = workspace:FindPartOnRay(ray, char)
+            if part then root.Velocity = Vector3.new(root.Velocity.X, 30, root.Velocity.Z) end
+        end
+    end
+
+    if Chams_Enabled then
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= LP and p.Character then
+                if not p.Character:FindFirstChild("ChamsBox") then
+                    local box = Instance.new("BoxHandleAdornment", p.Character)
+                    box.Name = "ChamsBox"
+                    box.Adornee = p.Character
+                    box.AlwaysOnTop = true
+                    box.ZIndex = 5
+                    box.Size = Vector3.new(4,6,1)
+                    box.Transparency = 0.5
+                    box.Color3 = Color3.fromRGB(255, 0, 0)
+                end
+            end
         end
     end
 
@@ -110,16 +126,18 @@ UIS.JumpRequest:Connect(function()
 end)
 
 local CombatTab = Window:CreateTab("Combat")
-CombatTab:CreateToggle({Name = "Old Aimbot (Hard)", CurrentValue = false, Callback = function(v) OldAimbot = v end})
-CombatTab:CreateToggle({Name = "New Aimbot (Smooth)", CurrentValue = false, Callback = function(v) NewAimbot = v end})
+CombatTab:CreateSection("Aimbot & Assists")
+CombatTab:CreateToggle({Name = "Old Aimbot", CurrentValue = false, Callback = function(v) OldAimbot = v end}):CreateKeybind({Keybind = "None", Callback = function(k) end})
+CombatTab:CreateToggle({Name = "New Aimbot", CurrentValue = false, Callback = function(v) NewAimbot = v end}):CreateKeybind({Keybind = "None", Callback = function(k) end})
 CombatTab:CreateToggle({Name = "Triggerbot", CurrentValue = false, Callback = function(v) TriggerBot = v end})
-CombatTab:CreateToggle({Name = "Kill Aura", CurrentValue = false, Callback = function(v) KillAura = v end})
-CombatTab:CreateToggle({Name = "No Recoil", CurrentValue = false, Callback = function(v) NoRecoil = v end})
+CombatTab:CreateToggle({Name = "Auto Reload", CurrentValue = false, Callback = function(v) AutoReload = v end})
+CombatTab:CreateToggle({Name = "Target HUD", CurrentValue = false, Callback = function(v) TargetHUD_Enabled = v end})
 CombatTab:CreateToggle({Name = "Show FOV Circle", CurrentValue = false, Callback = function(v) FOVCircle.Visible = v end})
 CombatTab:CreateSlider({Name = "Aimbot FOV", Range = {30, 800}, Increment = 1, CurrentValue = 150, Callback = function(v) Aimbot_FOV = v end})
 
-CombatTab:CreateSection("Hitbox Customizer")
-CombatTab:CreateSlider({Name = "Hitbox Width (W)", Range = {2, 50}, Increment = 1, CurrentValue = 2, Callback = function(v)
+CombatTab:CreateSection("Melee & Hitbox")
+CombatTab:CreateToggle({Name = "Kill Aura", CurrentValue = false, Callback = function(v) KillAura = v end})
+CombatTab:CreateSlider({Name = "Hitbox Width", Range = {2, 50}, Increment = 1, CurrentValue = 2, Callback = function(v)
     Hitbox_W = v
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -129,7 +147,7 @@ CombatTab:CreateSlider({Name = "Hitbox Width (W)", Range = {2, 50}, Increment = 
         end
     end
 end})
-CombatTab:CreateSlider({Name = "Hitbox Height (H)", Range = {2, 50}, Increment = 1, CurrentValue = 2, Callback = function(v)
+CombatTab:CreateSlider({Name = "Hitbox Height", Range = {2, 50}, Increment = 1, CurrentValue = 2, Callback = function(v)
     Hitbox_H = v
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -141,8 +159,8 @@ CombatTab:CreateSlider({Name = "Hitbox Height (H)", Range = {2, 50}, Increment =
 end})
 
 local MovementTab = Window:CreateTab("Movement")
-MovementTab:CreateSlider({Name = "WalkSpeed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) getHum().WalkSpeed = v end})
-MovementTab:CreateSlider({Name = "JumpPower", Range = {50, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) getHum().UseJumpPower = true getHum().JumpPower = v end})
+MovementTab:CreateSlider({Name = "Speed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) getHum().WalkSpeed = v end})
+MovementTab:CreateSlider({Name = "Jump", Range = {50, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) getHum().UseJumpPower = true getHum().JumpPower = v end})
 MovementTab:CreateToggle({Name = "Fly", CurrentValue = false, Callback = function(v) 
     Fly_Enabled = v
     if v then
@@ -151,11 +169,21 @@ MovementTab:CreateToggle({Name = "Fly", CurrentValue = false, Callback = functio
         bv.Name = "FlyVel"
         task.spawn(function() while Fly_Enabled do bv.Velocity = Camera.CFrame.LookVector * FlySpeed task.wait() end bv:Destroy() end)
     end
-end})
+end}):CreateKeybind({Keybind = "F", Callback = function(k) end})
 MovementTab:CreateSlider({Name = "Fly Speed", Range = {10, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) FlySpeed = v end})
-MovementTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) Noclip_Enabled = v end})
+MovementTab:CreateToggle({Name = "Spider Mode", CurrentValue = false, Callback = function(v) Spider_Enabled = v end})
+MovementTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) Noclip_Enabled = v end}):CreateKeybind({Keybind = "N", Callback = function(k) end})
 MovementTab:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(v) InfJump_Enabled = v end})
 
 local VisualsTab = Window:CreateTab("Visuals")
 VisualsTab:CreateToggle({Name = "ESP Highlight", CurrentValue = false, Callback = function(v) ESP_Enabled = v end})
+VisualsTab:CreateToggle({Name = "Chams (Wallhack)", CurrentValue = false, Callback = function(v) Chams_Enabled = v end})
+VisualsTab:CreateButton({Name = "X-Ray", Callback = function() 
+    for _, v in pairs(workspace:GetDescendants()) do 
+        if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then v.LocalTransparencyModifier = 0.5 end 
+    end 
+end})
+VisualsTab:CreateButton({Name = "Rainbow Map", Callback = function()
+    task.spawn(function() while task.wait() do game:GetService("Lighting").Ambient = Color3.fromHSV(tick()%5/5,1,1) end end)
+end})
 VisualsTab:CreateButton({Name = "Full Bright", Callback = function() game:GetService("Lighting").Brightness = 2 end})
