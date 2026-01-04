@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Delight Hub v12",
-   LoadingTitle = "Delight Hub | Final Edition",
+   LoadingTitle = "Delight Hub | Ultimate Edition",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -75,10 +75,23 @@ RunService.RenderStepped:Connect(function()
         if t then Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, t.Character.Head.Position), 0.15) end
     end
 
+    if TriggerBot then
+        local target = LP:GetMouse().Target
+        if target and target.Parent:FindFirstChild("Humanoid") then
+            local p = game.Players:GetPlayerFromCharacter(target.Parent)
+            if p and p ~= LP then
+                if not (TeamCheck and p.Team == LP.Team) then
+                    mouse1click()
+                end
+            end
+        end
+    end
+
     if KillAura then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                if (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude < 18 then
+                local distance = (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                if distance < 18 then
                     local tool = char:FindFirstChildOfClass("Tool")
                     if tool then tool:Activate() end
                 end
@@ -121,13 +134,17 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local CombatTab = Window:CreateTab("Combat")
-CombatTab:CreateSection("Aimbot Settings")
+CombatTab:CreateSection("Aimbot & Assists")
 CombatTab:CreateToggle({Name = "Old Aimbot", CurrentValue = false, Callback = function(v) OldAimbot = v end})
 CombatTab:CreateToggle({Name = "New Aimbot", CurrentValue = false, Callback = function(v) NewAimbot = v end})
+CombatTab:CreateToggle({Name = "Triggerbot", CurrentValue = false, Callback = function(v) TriggerBot = v end})
 CombatTab:CreateToggle({Name = "Wall Check", CurrentValue = false, Callback = function(v) WallCheck = v end})
 CombatTab:CreateSlider({Name = "Max Distance", Range = {10, 5000}, Increment = 10, CurrentValue = 500, Callback = function(v) MaxDistance = v end})
 CombatTab:CreateSlider({Name = "Aimbot FOV", Range = {30, 800}, Increment = 1, CurrentValue = 150, Callback = function(v) Aimbot_FOV = v end})
 CombatTab:CreateToggle({Name = "Show FOV Circle", CurrentValue = false, Callback = function(v) FOVCircle.Visible = v end})
+
+CombatTab:CreateSection("Melee Features")
+CombatTab:CreateToggle({Name = "Kill Aura", CurrentValue = false, Callback = function(v) KillAura = v end})
 
 local MovementTab = Window:CreateTab("Movement")
 MovementTab:CreateSlider({Name = "Speed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) getHum().WalkSpeed = v end})
