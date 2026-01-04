@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Delight Hub v12",
-   LoadingTitle = "Delight Hub | Rayzer Edition",
+   LoadingTitle = "Delight Hub | Final Stable",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -61,10 +61,12 @@ RunService.RenderStepped:Connect(function()
         local t = getClosest()
         if t then Camera.CFrame = CFrame.new(Camera.CFrame.Position, t.Character.Head.Position) end
     end
+
     if NewAimbot then
         local t = getClosest()
         if t then Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, t.Character.Head.Position), 0.15) end
     end
+
     if TriggerBot then
         local target = LP:GetMouse().Target
         if target and target.Parent:FindFirstChild("Humanoid") then
@@ -74,6 +76,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
     if KillAura then
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= LP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -84,6 +87,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
     if Spider_Enabled then
         local root = char:FindFirstChild("HumanoidRootPart")
         if root then
@@ -92,6 +96,7 @@ RunService.RenderStepped:Connect(function()
             if part then root.Velocity = Vector3.new(root.Velocity.X, 30, root.Velocity.Z) end
         end
     end
+
     if Noclip_Enabled then
         for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
@@ -103,8 +108,8 @@ UIS.JumpRequest:Connect(function()
     if InfJump_Enabled then getHum():ChangeState("Jumping") end
 end)
 
--- TAB: COMBAT
 local CombatTab = Window:CreateTab("Combat")
+
 CombatTab:CreateSection("Aimbot & Assists")
 CombatTab:CreateToggle({Name = "Old Aimbot", CurrentValue = false, Callback = function(v) OldAimbot = v end})
 CombatTab:CreateToggle({Name = "New Aimbot", CurrentValue = false, Callback = function(v) NewAimbot = v end})
@@ -137,10 +142,9 @@ CombatTab:CreateSlider({Name = "Hitbox Height", Range = {2, 50}, Increment = 1, 
     end
 end})
 
--- TAB: MOVEMENT
 local MovementTab = Window:CreateTab("Movement")
-MovementTab:CreateSlider({Name = "WalkSpeed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) getHum().WalkSpeed = v end})
-MovementTab:CreateSlider({Name = "JumpPower", Range = {50, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) getHum().UseJumpPower = true getHum().JumpPower = v end})
+MovementTab:CreateSlider({Name = "Speed", Range = {16, 1000}, Increment = 1, CurrentValue = 16, Callback = function(v) getHum().WalkSpeed = v end})
+MovementTab:CreateSlider({Name = "Jump", Range = {50, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) getHum().UseJumpPower = true getHum().JumpPower = v end})
 MovementTab:CreateToggle({Name = "Fly", CurrentValue = false, Callback = function(v) 
     Fly_Enabled = v
     if v then
@@ -151,11 +155,10 @@ MovementTab:CreateToggle({Name = "Fly", CurrentValue = false, Callback = functio
     end
 end})
 MovementTab:CreateSlider({Name = "Fly Speed", Range = {10, 1000}, Increment = 1, CurrentValue = 50, Callback = function(v) FlySpeed = v end})
-MovementTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) Noclip_Enabled = v end})
 MovementTab:CreateToggle({Name = "Spider Mode", CurrentValue = false, Callback = function(v) Spider_Enabled = v end})
+MovementTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) Noclip_Enabled = v end})
 MovementTab:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(v) InfJump_Enabled = v end})
 
--- TAB: VISUALS
 local VisualsTab = Window:CreateTab("Visuals")
 VisualsTab:CreateToggle({Name = "ESP Highlight", CurrentValue = false, Callback = function(v) ESP_Enabled = v end})
 VisualsTab:CreateToggle({Name = "Chams", CurrentValue = false, Callback = function(v) Chams_Enabled = v end})
