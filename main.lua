@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Delight Hub",
-   LoadingTitle = "Delight Hub v4",
+   LoadingTitle = "Delight Hub v5",
    LoadingSubtitle = "by Rayzer",
    ConfigurationSaving = { Enabled = true, Folder = "DelightHubConfig" }
 })
@@ -13,6 +13,8 @@ local InfJump_Enabled = false
 local Noclip_Enabled = false
 local Fly_Enabled = false
 local FlySpeed = 50
+local SpinBot_Enabled = false
+local AutoClicker_Enabled = false
 
 local function updateESP()
     for _, player in pairs(game:GetService("Players"):GetPlayers()) do
@@ -32,17 +34,25 @@ local function updateESP()
     end
 end
 
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if InfJump_Enabled then
-        game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
-end)
-
 game:GetService("RunService").Stepped:Connect(function()
     if Noclip_Enabled and game.Players.LocalPlayer.Character then
         for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
         end
+    end
+    if SpinBot_Enabled and game.Players.LocalPlayer.Character then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(50), 0)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if AutoClicker_Enabled then
+            local vu = game:GetService("VirtualUser")
+            vu:CaptureController()
+            vu:ClickButton1(Vector2.new(0, 0))
+        end
+        task.wait(0.01)
     end
 end)
 
@@ -57,15 +67,18 @@ VisualsTab:CreateToggle({
    end
 })
 
-VisualsTab:CreateColorPicker({
-    Name = "ESP Color",
-    Color = Color3.fromRGB(0, 255, 255),
-    Callback = function(v) ESP_Color = v end
+VisualsTab:CreateSlider({
+   Name = "Field of View (FOV)",
+   Range = {70, 120},
+   Increment = 1,
+   CurrentValue = 70,
+   Callback = function(v) game.Workspace.CurrentCamera.FieldOfView = v end
 })
 
 VisualsTab:CreateButton({
-   Name = "Full Bright",
+   Name = "No Fog & Full Bright",
    Callback = function()
+      game:GetService("Lighting").FogEnd = 100000
       game:GetService("Lighting").Brightness = 2
       game:GetService("Lighting").ClockTime = 14
       game:GetService("Lighting").GlobalShadows = false
@@ -93,14 +106,6 @@ MovementTab:CreateSlider({
    end
 })
 
-MovementTab:CreateSlider({
-   Name = "Fly Speed",
-   Range = {10, 1000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(v) FlySpeed = v end
-})
-
 MovementTab:CreateToggle({
    Name = "Fly",
    CurrentValue = false,
@@ -110,7 +115,6 @@ MovementTab:CreateToggle({
       if v then
          local bv = Instance.new("BodyVelocity", char.PrimaryPart)
          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-         bv.Velocity = Vector3.new(0,0,0)
          bv.Name = "FlyVelocity"
          task.spawn(function()
             while Fly_Enabled do
@@ -123,41 +127,36 @@ MovementTab:CreateToggle({
    end
 })
 
-MovementTab:CreateToggle({
-   Name = "Infinite Jump",
-   CurrentValue = false,
-   Callback = function(v) InfJump_Enabled = v end
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {10, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) FlySpeed = v end
 })
 
-MovementTab:CreateToggle({
+local MiscTab = Window:CreateTab("Misc/Admin")
+
+MiscTab:CreateToggle({
+   Name = "Auto Clicker",
+   CurrentValue = false,
+   Callback = function(v) AutoClicker_Enabled = v end
+})
+
+MiscTab:CreateToggle({
+   Name = "Spin Bot",
+   CurrentValue = false,
+   Callback = function(v) SpinBot_Enabled = v end
+})
+
+MiscTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
    Callback = function(v) Noclip_Enabled = v end
 })
 
-local AdminTab = Window:CreateTab("Admin")
-
-AdminTab:CreateDropdown({
-   Name = "Teleport to Player",
-   Options = {},
-   CurrentOption = "",
-   Callback = function(Option)
-      local targetPlayer = game.Players:FindFirstChild(Option)
-      if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-      end
-   end,
+MiscTab:CreateToggle({
+   Name = "Infinite Jump",
+   CurrentValue = false,
+   Callback = function(v) InfJump_Enabled = v end
 })
-
-task.spawn(function()
-   while true do
-      local playerList = {}
-      for _, p in pairs(game.Players:GetPlayers()) do
-         if p ~= game.Players.LocalPlayer then
-            table.insert(playerList, p.Name)
-         end
-      end
-      AdminTab:ModifyDropdown("Teleport to Player", playerList)
-      task.wait(5)
-   end
-end)
